@@ -1,0 +1,87 @@
+```mermaid
+erDiagram
+  House ||--o{ Room : contains
+  Room ||--o{ Bed : contains
+  House ||--o{ Reservation : hosts
+  Room ||--o{ Reservation : hosts
+  Bed ||--o{ Reservation : hosts
+  Reservation ||--o{ CleaningTask : generates
+  Reservation ||--o{ ChecklistEntry : includes
+  Reservation ||--o| ArrivalDeparture : travel
+  Reservation ||--o{ UtilityReading : consumes
+  Reservation ||--o{ LaundryOrder : laundry
+  House ||--o{ CleaningTask : assigned
+  Room ||--o{ CleaningTask : assigned
+  House ||--o{ InventoryItem : stocks
+  Room ||--o{ InventoryItem : stocks
+  InventoryItem ||--o{ ChecklistEntry : reviewed
+  Role ||--o{ User : has
+  User ||--o{ AuditLog : creates
+  Reservation ||--o{ AuditLog : audited
+
+  House {
+    string id
+    string name
+    int capacity
+    string notes
+  }
+  Room {
+    string id
+    string houseId
+    string name
+    int capacity
+  }
+  Bed {
+    string id
+    string roomId
+    string name
+  }
+  Reservation {
+    string id
+    string type
+    string status
+    datetime startAt
+    datetime endAt
+  }
+  CleaningTask {
+    string id
+    string type
+    string status
+    datetime scheduledAt
+  }
+  InventoryItem {
+    string id
+    string category
+    string condition
+  }
+  ChecklistEntry {
+    string id
+    string reservationId
+    string inventoryItemId
+  }
+  ArrivalDeparture {
+    string id
+    string reservationId
+  }
+  UtilityReading {
+    string id
+    string reservationId
+    string houseId
+  }
+  LaundryOrder {
+    string id
+    string reservationId
+  }
+  User {
+    string id
+    string email
+  }
+  Role {
+    string id
+    string name
+  }
+  AuditLog {
+    string id
+    string action
+  }
+```
