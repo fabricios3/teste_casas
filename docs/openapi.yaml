@@ -1,0 +1,571 @@
+openapi: 3.0.3
+info:
+  title: Hospedagem Nexus API
+  version: 0.1.0
+servers:
+  - url: /api
+paths:
+  /houses:
+    get:
+      summary: Listar casas
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200': { $ref: '#/components/responses/PaginatedHouses' }
+    post:
+      summary: Criar casa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/HouseInput' }
+      responses:
+        '201': { $ref: '#/components/responses/House' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /houses/{id}:
+    get:
+      summary: Detalhar casa
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200': { $ref: '#/components/responses/House' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      summary: Atualizar casa
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/HouseInput' }
+      responses:
+        '200': { $ref: '#/components/responses/House' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      summary: Remover casa
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '204': { description: Removido }
+  /rooms:
+    post:
+      summary: Criar quarto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RoomInput' }
+      responses:
+        '201': { $ref: '#/components/responses/Room' }
+  /beds:
+    post:
+      summary: Criar cama
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BedInput' }
+      responses:
+        '201': { $ref: '#/components/responses/Bed' }
+  /reservations:
+    get:
+      summary: Listar reservas por escopo
+      parameters:
+        - name: scope
+          in: query
+          required: true
+          schema: { type: string, enum: [house, room, bed] }
+        - name: id
+          in: query
+          required: true
+          schema: { type: string }
+        - name: from
+          in: query
+          required: true
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          required: true
+          schema: { type: string, format: date-time }
+      responses:
+        '200': { $ref: '#/components/responses/Reservations' }
+    post:
+      summary: Criar reserva (com exclusividade)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReservationInput' }
+      responses:
+        '201': { $ref: '#/components/responses/Reservation' }
+        '409': { $ref: '#/components/responses/ConflictError' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /reservations/{id}/confirm:
+    post:
+      summary: Confirmar reserva
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200': { $ref: '#/components/responses/Reservation' }
+  /reservations/{id}/cancel:
+    post:
+      summary: Cancelar reserva
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200': { $ref: '#/components/responses/Reservation' }
+  /reservations/{id}/checkin:
+    post:
+      summary: Check-in
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200': { $ref: '#/components/responses/Reservation' }
+  /reservations/{id}/checkout:
+    post:
+      summary: Check-out
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200': { $ref: '#/components/responses/Reservation' }
+  /reservations/conflicts:
+    get:
+      summary: Consultar conflitos
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          required: true
+          schema: { type: string, format: date-time }
+      responses:
+        '200': { $ref: '#/components/responses/ConflictList' }
+  /calendar/monthly:
+    get:
+      summary: Calendário mensal
+      responses:
+        '200': { $ref: '#/components/responses/CalendarMonthly' }
+  /calendar/daily:
+    get:
+      summary: Calendário diário
+      responses:
+        '200': { $ref: '#/components/responses/CalendarDaily' }
+  /cleaning/generate:
+    post:
+      summary: Gerar tarefas automáticas
+      responses:
+        '200': { $ref: '#/components/responses/CleaningTasks' }
+  /cleaning:
+    post:
+      summary: Criar tarefa de limpeza
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CleaningTaskInput' }
+      responses:
+        '201': { $ref: '#/components/responses/CleaningTask' }
+  /inventory:
+    post:
+      summary: Criar item de inventário
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InventoryItemInput' }
+      responses:
+        '201': { $ref: '#/components/responses/InventoryItem' }
+  /checklist/auto:
+    get:
+      summary: Checklist automático por reserva
+      parameters:
+        - name: reservationId
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/ChecklistEntries' }
+  /checklist/submit:
+    post:
+      summary: Enviar checklist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChecklistSubmitInput' }
+      responses:
+        '200': { $ref: '#/components/responses/ChecklistEntries' }
+  /arrivals:
+    post:
+      summary: Criar chegada/partida
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArrivalDepartureInput' }
+      responses:
+        '201': { $ref: '#/components/responses/ArrivalDeparture' }
+  /transfers/stats:
+    get:
+      summary: Estatísticas de transfers
+      responses:
+        '200': { $ref: '#/components/responses/TransferStats' }
+  /utilities:
+    post:
+      summary: Criar leitura de utilidades
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UtilityReadingInput' }
+      responses:
+        '201': { $ref: '#/components/responses/UtilityReading' }
+  /utilities/summary:
+    get:
+      summary: Resumo de consumos
+      parameters:
+        - name: houseId
+          in: query
+          required: true
+          schema: { type: string }
+        - name: month
+          in: query
+          required: true
+          schema: { type: string, example: '2024-08' }
+      responses:
+        '200': { $ref: '#/components/responses/UtilitySummary' }
+  /laundry:
+    post:
+      summary: Criar ordem de lavanderia
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LaundryOrderInput' }
+      responses:
+        '201': { $ref: '#/components/responses/LaundryOrder' }
+  /dashboard/occupancy:
+    get:
+      summary: KPI de ocupação
+      responses:
+        '200': { $ref: '#/components/responses/OccupancyKpi' }
+  /dashboard/utilities/monthly:
+    get:
+      summary: KPI mensal de utilidades
+      responses:
+        '200': { $ref: '#/components/responses/UtilityKpi' }
+  /dashboard/transfers:
+    get:
+      summary: KPI de transfers
+      responses:
+        '200': { $ref: '#/components/responses/TransferStats' }
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, default: 1 }
+    PageSize:
+      name: pageSize
+      in: query
+      schema: { type: integer, default: 20 }
+  schemas:
+    HouseInput:
+      type: object
+      required: [name, capacity]
+      properties:
+        name: { type: string }
+        capacity: { type: integer }
+        notes: { type: string }
+    RoomInput:
+      type: object
+      required: [houseId, name, capacity]
+      properties:
+        houseId: { type: string }
+        name: { type: string }
+        capacity: { type: integer }
+        notes: { type: string }
+    BedInput:
+      type: object
+      required: [roomId, name, capacity]
+      properties:
+        roomId: { type: string }
+        name: { type: string }
+        capacity: { type: integer }
+        notes: { type: string }
+    ReservationInput:
+      type: object
+      required: [type, status, startAt, endAt, guestName]
+      properties:
+        type: { type: string, enum: [CASA, QUARTO, CAMA] }
+        status: { type: string, enum: [PENDENTE, CONFIRMADA, CANCELADA, CHECKIN_REALIZADO, CHECKOUT_REALIZADO] }
+        startAt: { type: string, format: date-time }
+        endAt: { type: string, format: date-time }
+        guestName: { type: string }
+        price: { type: number }
+        paymentMethod: { type: string }
+        houseId: { type: string }
+        roomId: { type: string }
+        bedId: { type: string }
+    CleaningTaskInput:
+      type: object
+      required: [type, status, scheduledAt, responsible]
+      properties:
+        type: { type: string, enum: [PRE_CHECKIN, POS_CHECKOUT, RECORRENTE, MANUTENCAO] }
+        status: { type: string, enum: [PENDENTE, EM_ANDAMENTO, CONCLUIDA, CANCELADA] }
+        scheduledAt: { type: string, format: date-time }
+        responsible: { type: string }
+        reservationId: { type: string }
+        houseId: { type: string }
+        roomId: { type: string }
+    InventoryItemInput:
+      type: object
+      required: [category, name, quantity, condition]
+      properties:
+        category: { type: string }
+        name: { type: string }
+        quantity: { type: integer }
+        condition: { type: string }
+        replacementValue: { type: number }
+        houseId: { type: string }
+        roomId: { type: string }
+    ChecklistSubmitInput:
+      type: object
+      properties:
+        reservationId: { type: string }
+        entries:
+          type: array
+          items:
+            type: object
+            properties:
+              inventoryItemId: { type: string }
+              stateCheckin: { type: string }
+              stateCheckout: { type: string }
+              notes: { type: string }
+    ArrivalDepartureInput:
+      type: object
+      required: [reservationId, mode]
+      properties:
+        reservationId: { type: string }
+        mode: { type: string, enum: [AEREO, TERRESTRE] }
+        carrier: { type: string }
+        number: { type: string }
+        locator: { type: string }
+        origin: { type: string }
+        destination: { type: string }
+        arrivalAt: { type: string, format: date-time }
+        departureAt: { type: string, format: date-time }
+        transferIn: { type: boolean }
+        transferOut: { type: boolean }
+    UtilityReadingInput:
+      type: object
+      required: [reservationId, houseId, type, meterId, startReading, endReading, tariff, startAt, endAt]
+      properties:
+        reservationId: { type: string }
+        houseId: { type: string }
+        type: { type: string, enum: [LUZ, GAS] }
+        meterId: { type: string }
+        startReading: { type: number }
+        endReading: { type: number }
+        unit: { type: string, example: kWh }
+        tariff: { type: number }
+        startAt: { type: string, format: date-time }
+        endAt: { type: string, format: date-time }
+    LaundryOrderInput:
+      type: object
+      required: [itemName, itemType, quantityDelivered, quantityReturned, status, provider]
+      properties:
+        reservationId: { type: string }
+        houseId: { type: string }
+        roomId: { type: string }
+        itemName: { type: string }
+        itemType: { type: string }
+        quantityDelivered: { type: integer }
+        quantityReturned: { type: integer }
+        status: { type: string, enum: [SUJA, EM_LAVAGEM, LAVADA, PRONTA] }
+        provider: { type: string }
+  responses:
+    PaginatedHouses:
+      description: Lista paginada de casas
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items: { $ref: '#/components/schemas/HouseInput' }
+              pagination:
+                type: object
+                properties:
+                  page: { type: integer }
+                  pageSize: { type: integer }
+                  total: { type: integer }
+    House:
+      description: Casa
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/HouseInput' }
+    Room:
+      description: Quarto
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/RoomInput' }
+    Bed:
+      description: Cama
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/BedInput' }
+    Reservation:
+      description: Reserva
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ReservationInput' }
+    Reservations:
+      description: Reservas
+      content:
+        application/json:
+          schema:
+            type: array
+            items: { $ref: '#/components/schemas/ReservationInput' }
+    ConflictList:
+      description: Lista de conflitos
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              conflicts:
+                type: array
+                items: { $ref: '#/components/schemas/ReservationInput' }
+    CalendarMonthly:
+      description: Calendário mensal
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              month: { type: string }
+              days: { type: array, items: { type: object } }
+    CalendarDaily:
+      description: Calendário diário
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              range: { type: string }
+              days: { type: array, items: { type: object } }
+    CleaningTask:
+      description: Tarefa de limpeza
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/CleaningTaskInput' }
+    CleaningTasks:
+      description: Tarefas de limpeza
+      content:
+        application/json:
+          schema:
+            type: array
+            items: { $ref: '#/components/schemas/CleaningTaskInput' }
+    InventoryItem:
+      description: Item de inventário
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/InventoryItemInput' }
+    ChecklistEntries:
+      description: Checklist entries
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              reservationId: { type: string }
+              entries:
+                type: array
+                items: { type: object }
+    ArrivalDeparture:
+      description: Chegada/partida
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ArrivalDepartureInput' }
+    UtilityReading:
+      description: Leitura de utilidade
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/UtilityReadingInput' }
+    UtilitySummary:
+      description: Resumo de utilidades
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              totalCost: { type: number }
+              totalConsumption: { type: number }
+    OccupancyKpi:
+      description: KPI de ocupação
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              series: { type: array, items: { type: number } }
+    UtilityKpi:
+      description: KPI de utilidades
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              month: { type: string }
+              luz: { type: number }
+              gas: { type: number }
+    TransferStats:
+      description: KPI de transfers
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              pending: { type: integer }
+              confirmed: { type: integer }
+              completed: { type: integer }
+              canceled: { type: integer }
+    ConflictError:
+      description: Conflito de reserva
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code: { type: string }
+                  message: { type: string }
+                  conflicts: { type: array, items: { type: object } }
+    ValidationError:
+      description: Erro de validação
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code: { type: string }
+                  message: { type: string }
+                  fields: { type: object }
+    NotFound:
+      description: Não encontrado
